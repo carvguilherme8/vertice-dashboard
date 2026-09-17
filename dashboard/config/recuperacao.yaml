@@ -1,0 +1,47 @@
+# Configuração do módulo "Recuperação de receita pós-venda" (I02 + I03).
+# Política separada de mecanismo (arquivo 10, componente [J]): mudar número
+# aqui não exige tocar em código. Toda mudança fica versionada em Git.
+
+ingestao:
+  janela_dias: 90          # só entram pedidos com até N dias parado na data de referência
+
+scoring:
+  # Pesos somam 1.0 — nenhum deles vem de dado de resultado (não existe
+  # histórico de tentativas de recuperação), são heurística de negócio
+  # declarada, revisável quando o piloto gerar o registro em [H].
+  peso_valor: 0.45
+  peso_dias_parado: 0.40
+  peso_forma_pagamento: 0.15
+  # quantis usados para a curva de dias_parado (calculados sobre a própria
+  # fila da rodada, não fixos) — ver scoring.py:curva_dias_parado
+  quantil_baixo: 0.10
+  quantil_mediana: 0.50
+  quantil_alto: 0.90
+  # score por forma de pagamento — heurística: boleto pendente responde bem a
+  # lembrete; cartão/PIX cancelados costumam ser falha de autorização (menos
+  # recuperável por mensagem); vale-troca é o de menor urgência.
+  forma_pagamento:
+    Boleto: 1.00
+    PIX: 0.60
+    "Cartão de Crédito": 0.50
+    Vale-Troca: 0.30
+  # multiplicador por canal — neutro (1.0) até o piloto trazer evidência de
+  # diferença real; é um gancho estrutural, não um número inventado.
+  canal_multiplicador: {}   # vazio = 1.0 para todos os canais
+
+fila:
+  top_n: 15                # pedidos processados por rodada (capacidade do operador)
+
+politica:
+  teto_desconto_pct: 20    # herdado do módulo I05 — usado como restrição na mensagem ao cliente
+  tom_por_canal:
+    default: "cordial e direto, sem soar como cobrança"
+
+llm:
+  provider: ollama
+  host: "http://localhost:11434"
+  model: "gemma3:4b"        # já baixado neste ambiente (`ollama list`); trocar se usar outro tamanho
+  temperatura: 0.2
+
+reflexao:
+  max_regeneracoes: 1

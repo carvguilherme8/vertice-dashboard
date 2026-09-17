@@ -1,0 +1,7 @@
+streamlit>=1.38
+pandas>=2.1
+plotly>=5.19
+pyarrow>=14
+pyyaml>=6.0
+pydantic>=2.6
+ollama>=0.3
