@@ -22,10 +22,6 @@ A aba "Recuperação de receita pós-venda" precisa de [Ollama](https://ollama.c
 ollama pull gemma3:4b   # ou outro tamanho — ajuste em dashboard/config/recuperacao.yaml
 ```
 
-## ⚠️ Limitação no deploy em nuvem (Streamlit Community Cloud)
-
-O Streamlit Community Cloud **não tem Ollama instalado** e não acessa o Ollama da sua máquina local — não há como uma aba hospedada na nuvem chamar um modelo que só existe no seu computador. Ao publicar este app lá, as abas **Prevenção de devolução**, **Priorizador de margem e receita** e **Memo executivo** funcionam normalmente (são só pandas/plotly), mas a aba **Recuperação de receita pós-venda** vai mostrar o erro tratado "Ollama não respondeu" ao clicar em "Gerar fila da rodada" — a fila priorizada (scoring) é calculada, só a geração de texto por LLM não roda lá. Para essa aba funcionar 100% em produção seria necessário trocar o backend de Ollama local para uma API hospedada (ex.: Anthropic Claude, ver discussão no histórico do case) ou hospedar o Ollama em outro serviço acessível pela internet.
-
 ## Testes
 
 ```bash
