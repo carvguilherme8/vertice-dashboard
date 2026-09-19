@@ -1,6 +1,8 @@
-"""Identidade visual do Painel Único — estética de BI corporativo (azul neutro,
-cinzas de sistema, cores de status reservadas), seguindo a paleta validada
-(CVD-safe) descrita na skill dataviz/references/palette.md.
+"""Identidade visual do Painel Único — chrome de UI com a identidade EloGroup
+(azul índigo, lilás, papel quente, tipografia geométrica, bordas retas) sobre
+uma paleta de dados de BI que permanece intocada: CVD-safe, validada pela
+skill dataviz/references/palette.md. Cor de marca é só chrome (abas, cards,
+títulos) — nunca reaproveitada como cor de série num gráfico.
 """
 import textwrap
 
@@ -29,19 +31,25 @@ ORDINAL_BLUE_6 = ["#86b6ef", "#6da7ec", "#3987e5", "#2a78d6", "#1c5cab", "#10428
 REF_GRAY = "#a8a7a0"
 ACTUAL_BLUE = CAT_BLUE
 
-# ---- chrome de sistema (dashboard corporativo, não marca de marketing) ----
-SIDEBAR_BG = "#0f172a"
-SIDEBAR_BG_2 = "#16213a"
-PAGE_BG = "#f4f5f7"
-SURFACE = "#ffffff"
-INK = "#111827"
-INK_2 = "#4b5563"
-MUTED = "#8a8f98"
-GRID = "#e8e9ec"
-BASELINE = "#d0d2d8"
-BORDER = "rgba(17,24,39,.09)"
+# ---- marca EloGroup (chrome de UI apenas — abas, cards, títulos, links) ----
+# tokens extraídos de elogroup.com: azul índigo de marca + lilás de apoio.
+BRAND = "#0C1BA8"
+BRAND_HOVER = "#0916A0"
+ACCENT = "#6E55D6"       # lilás — realces secundários, hover de links
+ACCENT_TINT = "#B8A8FF"  # lilás claro — fundos e tints sutis
 
-FONT_STACK = "Inter, -apple-system, 'Segoe UI', system-ui, sans-serif"
+# ---- chrome de sistema (papel quente + tinta escura, à la elogroup.com) ---
+PAGE_BG = "#F6F5F2"
+SURFACE = "#ffffff"
+INK = "#1A1A1A"
+INK_2 = "#45474D"
+MUTED = "#797C86"
+GRID = "#E8E8E5"
+BASELINE = "#D5D5D2"
+BORDER = "rgba(26,26,26,.12)"
+
+FONT_STACK = "'Space Grotesk', 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif"
+MONO_STACK = "'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace"
 TITLE_FONT = dict(family=FONT_STACK, color=INK, size=14)
 DATA_LABEL_FONT = dict(family=FONT_STACK, color=INK, size=11.5)
 AXIS_TITLE_FONT = dict(family=FONT_STACK, color=INK_2, size=11.5)
@@ -67,33 +75,33 @@ def style_fig(fig, **overrides):
 
 
 def inject_base_css():
-    tint_blue = hex_to_rgba(CAT_BLUE, 0.08)
+    tint_brand = hex_to_rgba(BRAND, 0.07)
     css = f"""
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
         <style>
         html, body, [class*="css"] {{ font-family: {FONT_STACK}; }}
         .stApp {{ background-color: {PAGE_BG}; }}
         div.block-container {{ padding-top: 1.6rem; padding-bottom: 2rem; max-width: 1400px; }}
 
-        h1, h2, h3, h4 {{ letter-spacing: -0.01em; color: {INK}; font-weight: 700; }}
+        h1, h2, h3, h4 {{ letter-spacing: -0.02em; color: {INK}; font-weight: 600; }}
         p, li, label {{ color: {INK_2}; }}
         [data-testid="stCaptionContainer"] {{ color: {MUTED} !important; font-size: 12.5px; }}
 
         /* cabeçalho: título + filtros na mesma linha, no lugar da sidebar */
-        .app-title h1 {{ font-size: 21px; margin: 6px 0 2px; line-height: 1.2; }}
-        .app-title .sub {{ font-size: 12.5px; color: {MUTED}; }}
-        .header-divider {{ border-bottom: 1px solid {BORDER}; margin: 2px 0 10px; }}
+        .app-title h1 {{ font-size: 22px; font-weight: 500; margin: 6px 0 3px; line-height: 1.2; }}
+        .app-title .sub {{ font-family: {MONO_STACK}; font-size: 11px; letter-spacing: .02em; color: {MUTED}; }}
+        .header-divider {{ border-bottom: 1px solid {BASELINE}; margin: 2px 0 10px; }}
 
         /* KPI tiles */
         .stat-tile {{
-            background: {SURFACE} !important; border: 1px solid {BORDER}; border-radius: 10px;
-            padding: 10px 14px 9px; min-height: 92px; box-shadow: 0 1px 2px rgba(17,24,39,.04);
+            background: {SURFACE} !important; border: 1px solid {BORDER}; border-left: 2px solid {BRAND}; border-radius: 0;
+            padding: 10px 14px 9px; min-height: 92px; box-shadow: none;
             display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
         }}
-        .stat-tile .label {{ font-size: 10.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: {MUTED} !important; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-        .stat-tile .value {{ font-size: 20px; font-weight: 700; color: {INK} !important; line-height: 1.15; }}
+        .stat-tile .label {{ font-family: {MONO_STACK}; font-size: 10px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: {MUTED} !important; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+        .stat-tile .value {{ font-size: 21px; font-weight: 600; color: {INK} !important; line-height: 1.15; }}
         .stat-tile .delta {{ font-size: 11px; margin-top: 2px; color: {INK_2} !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
         .stat-tile .delta.good {{ color: {GOOD} !important; }} .stat-tile .delta.critical {{ color: {CRITICAL} !important; }} .stat-tile .delta.warning {{ color: {WARNING} !important; }}
         .stat-tile .spark {{ display:block; margin-top: 5px; width: 100%; height: 20px; }}
@@ -105,65 +113,65 @@ def inject_base_css():
         /* cartão de alerta discreto (substitui st.error/warning/info padrão) */
         .alert-card {{
             flex: 1 1 240px; background:{SURFACE}; border:1px solid {BORDER}; border-left:3px solid var(--ac, {MUTED});
-            border-radius: 8px; padding: 8px 12px; font-size: 12px; line-height: 1.35; color:{INK_2};
+            border-radius: 0; padding: 8px 12px; font-size: 12px; line-height: 1.35; color:{INK_2};
         }}
         .alert-card b {{ color:{INK}; }}
         .alert-card.critical {{ --ac: {CRITICAL}; }}
         .alert-card.warning {{ --ac: {WARNING}; }}
-        .alert-card.info {{ --ac: {CAT_BLUE}; }}
+        .alert-card.info {{ --ac: {BRAND}; }}
 
-        .section-title {{ font-size: 14px; font-weight: 700; color:{INK}; margin: 14px 0 1px; display:flex; align-items:center; gap:8px; }}
+        .section-title {{ font-size: 14px; font-weight: 600; color:{INK}; margin: 16px 0 1px; display:flex; align-items:center; gap:8px; }}
+        .section-title::before {{ content: ""; display:inline-block; width:7px; height:7px; background:{BRAND}; flex-shrink:0; }}
         .section-sub {{ font-size: 11.5px; color:{MUTED}; margin: 0 0 6px; }}
 
-        /* barra de abas: pills numa cor só (azul do app), sem diferenciar por módulo.
+        /* barra de abas: estilo editorial (underline), sem preenchimento.
            Seletores sem qualificador de tag (div/button) de propósito — o Streamlit
            trocou a biblioteca dos componentes de abas entre versões e a tag mudou. */
         [data-testid="stTabs"] {{ width: 100% !important; margin-top: 22px; }}
-        [data-testid="stTabs"] [role="tablist"] {{ display: flex !important; width: 100% !important; gap: 6px; }}
+        [data-testid="stTabs"] [role="tablist"] {{ display: flex !important; width: 100% !important; gap: 2px; border-bottom: 1px solid {BASELINE}; }}
         [data-testid="stTabs"] [data-testid="stTab"] {{
             flex: 1 1 0 !important; width: auto !important; justify-content: center; white-space: nowrap;
-            font-weight: 600; font-size: 13px; color: {INK_2}; cursor: pointer;
-            padding: 9px 14px 10px; border-radius: 8px; background: {SURFACE};
-            border: 1px solid {BORDER}; border-bottom: 3px solid {BORDER};
-            box-shadow: 0 1px 2px rgba(17,24,39,.05);
-            transition: background .12s ease, color .12s ease, box-shadow .12s ease, transform .12s ease;
+            font-family: {MONO_STACK}; font-weight: 500; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase;
+            color: {MUTED}; cursor: pointer;
+            padding: 10px 14px 9px; border-radius: 0; background: transparent;
+            border: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
+            transition: color .12s ease, border-color .12s ease;
         }}
         [data-testid="stTabs"] [data-testid="stTab"]:hover {{
-            background: {PAGE_BG}; color: {INK}; box-shadow: 0 3px 6px rgba(17,24,39,.10); transform: translateY(-1px);
+            color: {INK}; border-bottom-color: {BASELINE};
         }}
         [data-testid="stTabs"] [data-testid="stTab"][aria-selected="true"] {{
-            color: {CAT_BLUE}; background: {tint_blue}; border-color: {CAT_BLUE};
-            font-weight: 700; box-shadow: 0 3px 8px rgba(17,24,39,.14); transform: translateY(-1px);
+            color: {BRAND}; background: {tint_brand}; border-bottom-color: {BRAND}; font-weight: 600;
         }}
         [data-testid="stTabsScrollLeft"], [data-testid="stTabsScrollRight"] {{ display: none; }}
-        div[data-testid="stDataFrame"] {{ border: 1px solid {BORDER}; border-radius: 8px; }}
+        div[data-testid="stDataFrame"] {{ border: 1px solid {BORDER}; border-radius: 0; }}
         div[data-testid="stVerticalBlockBorderWrapper"] {{ margin-bottom: 0.3rem; }}
         div.element-container {{ margin-bottom: 0.35rem; }}
 
-        /* moldura arredondada dos gráficos + bold em todo texto do SVG */
+        /* moldura reta dos gráficos + bold em todo texto do SVG */
         div[data-testid="stPlotlyChart"] {{
-            background: {SURFACE}; border: 1px solid {BORDER}; border-radius: 10px;
-            padding: 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(17,24,39,.04);
+            background: {SURFACE}; border: 1px solid {BORDER}; border-radius: 0;
+            padding: 8px; overflow: hidden; box-shadow: none;
         }}
-        div[data-testid="stPlotlyChart"] svg text {{ font-weight: 700 !important; }}
+        div[data-testid="stPlotlyChart"] svg text {{ font-weight: 600 !important; }}
 
         /* cartão do guia de abas (aba "Guia do painel") */
         div[data-testid="column"]:has(.guide-card) {{ display: flex; }}
         div[data-testid="column"]:has(.guide-card) > div {{ display: flex; flex-direction: column; width: 100%; }}
         div[data-testid="column"]:has(.guide-card) div.element-container:has(.guide-card) {{ flex: 1; display: flex; }}
         .guide-card {{
-            background: {SURFACE}; border: 1px solid {BORDER}; border-top: 6px solid {CAT_BLUE};
-            border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 8px; width: 100%; box-sizing: border-box;
-            box-shadow: 0 1px 2px rgba(17,24,39,.04);
+            background: {SURFACE}; border: 1px solid {BORDER}; border-top: 3px solid {BRAND};
+            border-radius: 0; padding: 14px 16px 16px; margin-bottom: 8px; width: 100%; box-sizing: border-box;
+            box-shadow: none;
         }}
-        .guide-card-head {{ display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }}
+        .guide-card-head {{ display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }}
         .guide-card-num {{
             display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-            width: 22px; height: 22px; border-radius: 50%; background: {CAT_BLUE};
-            color: #fff; font-size: 11.5px; font-weight: 700;
+            width: 22px; height: 22px; border-radius: 0; background: {BRAND};
+            color: #fff; font-family: {MONO_STACK}; font-size: 11px; font-weight: 500;
         }}
-        .guide-card-title {{ font-size: 15px; font-weight: 700; color: {INK}; }}
-        .guide-card-label {{ font-size: 10.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: {MUTED}; margin: 10px 0 2px; }}
+        .guide-card-title {{ font-size: 15px; font-weight: 600; color: {INK}; }}
+        .guide-card-label {{ font-family: {MONO_STACK}; font-size: 10px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: {MUTED}; margin: 10px 0 3px; }}
         .guide-card-label:first-of-type {{ margin-top: 0; }}
         .guide-card-text {{ font-size: 12.5px; line-height: 1.5; color: {INK_2}; }}
         </style>

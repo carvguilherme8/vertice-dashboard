@@ -93,7 +93,7 @@ def _kpis(vendas: pd.DataFrame, mensal: pd.DataFrame):
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.markdown(theme.stat_tile("Margem realizada", theme.fmt_pct(margem["pct_realizado"]), f"vs. {theme.fmt_pct(margem['pct_contabil'])} contábil", "neutral", mensal["margem_pct_realizada"] * 100, theme.CAT_BLUE), unsafe_allow_html=True)
+        st.markdown(theme.stat_tile("Margem realizada", theme.fmt_pct(margem["pct_realizado"]), f"vs. {theme.fmt_pct(margem['pct_contabil'])} contábil", "neutral", mensal["margem_pct_realizada"] * 100, theme.BRAND), unsafe_allow_html=True)
     with c2:
         st.markdown(theme.stat_tile("Margem não realizada", theme.fmt_brl(margem["gap"]), "devolução + cancel. + pendente", "critical", (mensal["margem_contabil"] - mensal["margem_realizada"]), theme.CRITICAL), unsafe_allow_html=True)
     with c3:
@@ -114,7 +114,7 @@ def _modulo_guia():
     with c1:
         st.markdown(
             theme.guide_card(
-                theme.CAT_BLUE,
+                theme.BRAND,
                 "1",
                 "Recuperação de receita pós-venda",
                 "Organiza automaticamente, em ordem de prioridade, os pedidos com pagamento pendente ou cancelado "
@@ -130,7 +130,7 @@ def _modulo_guia():
     with c2:
         st.markdown(
             theme.guide_card(
-                theme.CAT_BLUE,
+                theme.BRAND,
                 "2",
                 "Prevenção de devolução na origem",
                 "Separa as devoluções que a empresa pode evitar (defeito no produto, tamanho errado, atraso na "
@@ -145,7 +145,7 @@ def _modulo_guia():
     with c3:
         st.markdown(
             theme.guide_card(
-                theme.CAT_BLUE,
+                theme.BRAND,
                 "3",
                 "Priorizador de margem e receita",
                 "Simula um limite de desconto e mostra quanto está sendo concedido acima dele sem gerar venda "
@@ -160,7 +160,7 @@ def _modulo_guia():
     with c4:
         st.markdown(
             theme.guide_card(
-                theme.CAT_BLUE,
+                theme.BRAND,
                 "4",
                 "Memo executivo",
                 "Reúne os principais números do período (margem, desconto, frete, atendimento ao cliente, custo "
