@@ -1,4 +1,4 @@
-streamlit>=1.38
+streamlit==1.38.0
 pandas>=2.1
 plotly>=5.19
 pyarrow>=14
