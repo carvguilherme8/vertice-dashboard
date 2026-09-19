@@ -52,7 +52,7 @@ def render():
         st.markdown(
             '<div class="app-title"><h1>Painel Único de Decisão Comercial</h1>'
             '<div class="sub">Recuperação de receita pós-venda · Prevenção de devolução na origem · '
-            'Priorizador de margem · Memo executivo · Vértice Retail</div></div>',
+            'Priorizador de margem e receita · Memo executivo · Vértice Retail</div></div>',
             unsafe_allow_html=True,
         )
     with h2:
@@ -64,16 +64,18 @@ def render():
     data_ini, data_fim = periodo if isinstance(periodo, tuple) and len(periodo) == 2 else (dmin, dmax)
     vendas = filtrar_vendas(vendas_full, data_ini, data_fim, canais)
     if vendas.empty:
-        st.warning("Nenhum pedido no filtro selecionado — ajuste o período ou o canal acima.")
+        st.warning("Nenhum pedido no filtro selecionado. Ajuste o período ou o canal acima.")
         return
 
     mensal = metrics.margem_mensal(vendas)
     _kpis(vendas, mensal)
-    _alertas(vendas, estoque)
+
+    with st.expander("Guia do painel — o que cada aba faz"):
+        _modulo_guia()
 
     tab_e, tab_dev, tab_c, tab_d = st.tabs([
         "Recuperação de receita pós-venda", "Prevenção de devolução na origem",
-        "Priorizador de margem", "Memo executivo",
+        "Priorizador de margem e receita", "Memo executivo",
     ])
     with tab_e:
         _modulo_recuperacao(vendas_full)
@@ -100,39 +102,110 @@ def _kpis(vendas: pd.DataFrame, mensal: pd.DataFrame):
         st.markdown(theme.stat_tile("Receita líquida", theme.fmt_brl(vendas["receita_liquida"].sum()), f"{theme.fmt_num(len(vendas))} pedidos", "good", mensal["receita_liquida"], theme.GOOD), unsafe_allow_html=True)
 
 
-def _alertas(vendas: pd.DataFrame, estoque: pd.DataFrame):
-    curva = metrics.curva_abc(vendas, estoque)
-    skus = metrics.skus_criticos_curva_a(curva, vendas)
-    n_ruptura = int(estoque["ruptura"].sum())
-    sim = metrics.simular_teto_desconto(vendas, 25)
-
+def _modulo_guia():
     st.markdown(
-        '<div class="alert-row">'
-        + theme.alert_card("critical", f"<b>{n_ruptura} SKUs em ruptura</b> na base · <b>{skus['n_criticos']}</b> críticos na curva A de alto giro")
-        + theme.alert_card("warning", f"<b>{theme.fmt_brl(sim['desconto_concedido_acima'])}</b> concedidos acima de 25% de desconto no período")
-        + theme.alert_card("info", f"<b>{theme.fmt_brl(skus['receita_em_risco_anual'])}/ano</b> em risco se a ruptura persistir")
-        + "</div>",
+        '<div class="section-sub">Cada aba ataca uma causa diferente de perda de receita ou margem identificada '
+        'no diagnóstico do case Vértice. Use este guia para saber em qual aba encontrar cada resposta. '
+        'Os filtros de período e canal no topo valem para todas elas.</div>',
         unsafe_allow_html=True,
     )
+
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.markdown(
+            theme.guide_card(
+                theme.CAT_BLUE,
+                "1",
+                "Recuperação de receita pós-venda",
+                "Organiza automaticamente, em ordem de prioridade, os pedidos com pagamento pendente ou cancelado "
+                "que merecem contato imediato, considerando o valor do pedido, há quanto tempo está parado e a "
+                "forma de pagamento. Para cada pedido, já sugere ao time uma justificativa e uma mensagem pronta "
+                "para o cliente, que podem ser aprovadas, ajustadas ou descartadas antes de enviar.",
+                "Pedidos já vendidos, mas com pagamento parado, ficam represados sem um critério claro de quem "
+                "contatar primeiro. Esta aba direciona o esforço do time para recuperar essa receita antes que "
+                "vire cancelamento definitivo.",
+            ),
+            unsafe_allow_html=True,
+        )
+    with c2:
+        st.markdown(
+            theme.guide_card(
+                theme.CAT_BLUE,
+                "2",
+                "Prevenção de devolução na origem",
+                "Separa as devoluções que a empresa pode evitar (defeito no produto, tamanho errado, atraso na "
+                "entrega) das que são decisão do cliente (arrependimento) e não têm como ser eliminadas. Mostra "
+                "quanto cada motivo, fornecedor e produto representa em perda.",
+                "Nem toda devolução é um problema que a empresa consegue resolver. Esta aba mostra exatamente "
+                "onde vale a pena agir, processo interno ou fornecedor, em vez de tratar toda devolução como "
+                "se fosse evitável.",
+            ),
+            unsafe_allow_html=True,
+        )
+    with c3:
+        st.markdown(
+            theme.guide_card(
+                theme.CAT_BLUE,
+                "3",
+                "Priorizador de margem e receita",
+                "Simula um limite de desconto e mostra quanto está sendo concedido acima dele sem gerar venda "
+                "adicional em troca. Também lista os produtos mais vendidos que estão em falta ou perto de faltar "
+                "no estoque, com o valor de venda que se perde enquanto isso não é corrigido.",
+                "Reúne as duas maiores fontes de perda identificadas: desconto dado sem retorno em vendas (reduz "
+                "margem) e falta de estoque nos produtos mais vendidos (reduz receita). Aponta onde agir em "
+                "cada uma.",
+            ),
+            unsafe_allow_html=True,
+        )
+    with c4:
+        st.markdown(
+            theme.guide_card(
+                theme.CAT_BLUE,
+                "4",
+                "Memo executivo",
+                "Reúne os principais números do período (margem, desconto, frete, atendimento ao cliente, custo "
+                "dos produtos) e monta automaticamente um resumo com a situação, a causa, o impacto no negócio "
+                "e as recomendações, pronto para levar à diretoria.",
+                "Evita que alguém precise montar manualmente essa análise a cada reunião. Traduz os números das "
+                "outras abas em uma recomendação objetiva, pronta para decisão.",
+            ),
+            unsafe_allow_html=True,
+        )
 
 
 def _modulo_c(vendas: pd.DataFrame, estoque: pd.DataFrame):
     st.markdown('<div class="section-title">Guardrail 1 · Teto de desconto por faixa</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-sub">Simulador: e se a empresa parasse de dar desconto acima de um certo limite? '
+        'A análise mostra que desconto maior não faz o cliente comprar mais por pedido. Acima de um certo ponto, '
+        'desconto é só dinheiro deixado na mesa. Ajuste o limite abaixo para ver, nos pedidos já feitos no '
+        'período, quantos seriam afetados e quanto isso representa em reais e em margem.</div>',
+        unsafe_allow_html=True,
+    )
     teto = st.slider(
         "Teto de desconto (%)", min_value=0, max_value=40, value=25, step=1, key="teto_desconto",
-        help="Unidades por pedido não sobem com o desconto — acima do teto, o desconto é margem cedida sem contrapartida de volume.",
+        help="Desconto maior não fez os clientes comprarem mais por pedido. Acima deste limite, o desconto é "
+        "dinheiro perdido sem gerar venda extra em troca.",
     )
     sim = metrics.simular_teto_desconto(vendas, teto)
     delta_margem = (sim["margem_pct_dentro"] - sim["margem_pct_acima"]) if sim["margem_pct_acima"] is not None and sim["margem_pct_dentro"] is not None else None
 
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.markdown(theme.stat_tile("Pedidos acima do teto", theme.fmt_num(sim["n_pedidos_acima"]), f"{theme.fmt_pct(sim['pct_pedidos_acima'])} do total", "warning"), unsafe_allow_html=True)
+        st.markdown(theme.stat_tile("Pedidos acima do teto", theme.fmt_num(sim["n_pedidos_acima"]), f"{theme.fmt_pct(sim['pct_pedidos_acima'])} do total de pedidos afetados", "warning"), unsafe_allow_html=True)
     with c2:
-        st.markdown(theme.stat_tile("Recuperável se a regra for aplicada", theme.fmt_brl(sim["desconto_concedido_acima"]), None, "good"), unsafe_allow_html=True)
+        st.markdown(theme.stat_tile("Recuperável se a regra for aplicada", theme.fmt_brl(sim["desconto_concedido_acima"]), "desconto dado só a esses pedidos", "good"), unsafe_allow_html=True)
     with c3:
         delta_txt = f"+{theme.fmt_pct(delta_margem)} vs. acima do teto" if delta_margem is not None else None
         st.markdown(theme.stat_tile("Margem % dentro do teto", theme.fmt_pct(sim["margem_pct_dentro"]), delta_txt, "good"), unsafe_allow_html=True)
+
+    st.markdown('<div class="header-divider"></div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-sub">Os 3 cards acima mudam com o teto escolhido no slider. Os dois gráficos abaixo '
+        'são fixos, com todas as faixas de desconto lado a lado, e servem de referência. Não mudam quando você '
+        'ajusta o teto.</div>',
+        unsafe_allow_html=True,
+    )
 
     faixa = metrics.desconto_por_faixa(vendas)
     cc1, cc2 = st.columns(2)
@@ -142,6 +215,12 @@ def _modulo_c(vendas: pd.DataFrame, estoque: pd.DataFrame):
     with cc2:
         fig = _bar(faixa["faixa_desconto"].astype(str), faixa["pedidos"], theme.CAT_BLUE, "Volume de pedidos por faixa", text=[f"{v:,}".replace(",", ".") for v in faixa["pedidos"]])
         st.plotly_chart(fig, use_container_width=True, theme=None)
+    st.markdown(
+        '<div class="section-sub">Leitura dos dois gráficos juntos: se o desconto comprasse mais vendas, o volume '
+        'subiria junto com a faixa de desconto. Não sobe na mesma proporção que a margem cai: é margem cedida '
+        'sem retorno em volume.</div>',
+        unsafe_allow_html=True,
+    )
 
     with st.expander(f"{min(20, sim['n_pedidos_acima'])} maiores pedidos que a regra bloquearia"):
         acima = vendas[vendas["desconto_pct"] > teto / 100].sort_values("desconto_reais", ascending=False).head(20)
@@ -175,6 +254,10 @@ def _modulo_c(vendas: pd.DataFrame, estoque: pd.DataFrame):
     top10 = tabela.head(10).sort_values("receita_liquida_periodo")
     fig = _bar(top10["receita_liquida_periodo"], top10["sku_id"] + " · " + top10["nome_produto"].str.slice(0, 18), theme.CRITICAL, "Top 10 SKUs críticos por receita em risco", horizontal=True, height=320)
     st.plotly_chart(fig, use_container_width=True, theme=None)
+    st.markdown(
+        '<div class="section-sub">Comece a reposição por aqui: são os produtos de maior receita entre os SKUs críticos.</div>',
+        unsafe_allow_html=True,
+    )
 
     filtro_status = st.radio("Filtrar tabela", ["Todos", "Ruptura", "Abaixo do ponto de pedido"], horizontal=True, key="filtro_sku", label_visibility="collapsed")
     if filtro_status != "Todos":
@@ -195,7 +278,7 @@ def _modulo_c(vendas: pd.DataFrame, estoque: pd.DataFrame):
     with cc1:
         diff = abs(guard["desconto_pct_sku_critico"] - guard["desconto_pct_sku_normal"])
         if diff < 0.01:
-            st.markdown(theme.alert_card("warning", "Desconto <b>não muda</b> diante de estoque crítico — o sinal existe e é ignorado."), unsafe_allow_html=True)
+            st.markdown(theme.alert_card("warning", "Desconto <b>não muda</b> diante de estoque crítico. O sinal existe e é ignorado."), unsafe_allow_html=True)
         else:
             st.markdown(theme.alert_card("info", "Há diferença perceptível entre o desconto de SKU crítico e normal."), unsafe_allow_html=True)
     with cc2:
@@ -218,15 +301,30 @@ def _modulo_d(vendas: pd.DataFrame, estoque: pd.DataFrame, atendimento: pd.DataF
     chatbot = metrics.chatbot_economia(atendimento)
     cmv = metrics.cmv_estabilidade(vendas)
     atend_cat = metrics.atendimento_por_categoria(atendimento)
+    top_categoria = atend_cat.sort_values("tickets", ascending=False).iloc[0]["categoria_problema"]
 
+    st.markdown('<div class="section-title">Fato · quanto da margem registrada realmente vira caixa</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-sub">A diferença entre as duas barras é exatamente a "Margem não realizada" mostrada '
+        'no topo do painel. A série mensal ao lado mostra se esse gap está diminuindo, estável ou piorando.</div>',
+        unsafe_allow_html=True,
+    )
     col_a, col_b = st.columns([1, 1.3])
     with col_a:
         fig = _bar(["Contábil", "Realizada"], [margem["contabil"], margem["realizado"]], [theme.REF_GRAY, theme.CAT_BLUE], "Margem contábil vs. realizada", text=[theme.fmt_brl(margem["contabil"]), theme.fmt_brl(margem["realizado"])], height=300)
         st.plotly_chart(fig, use_container_width=True, theme=None)
     with col_b:
-        fig = _line(mensal["mes"], mensal["margem_pct_realizada"] * 100, theme.CAT_BLUE, "Margem % realizada — evolução mensal", height=300, hovertemplate="%{x|%b/%y}<br>%{y:.1f}%<extra></extra>")
+        fig = _line(mensal["mes"], mensal["margem_pct_realizada"] * 100, theme.CAT_BLUE, "Margem % realizada por mês", height=300, hovertemplate="%{x|%b/%y}<br>%{y:.1f}%<extra></extra>")
         st.plotly_chart(fig, use_container_width=True, theme=None)
 
+    st.markdown('<div class="section-title">Causa · dois vazamentos de custo fora da precificação</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-sub">Nenhum dos dois aparece na margem calculada por pedido, mas os dois corroem o '
+        'resultado todo mês: o Marketplace paga desproporcionalmente mais frete que os demais canais, e o '
+        'atendimento humano custa mais que o ChatBot para resolver o mesmo tipo de chamado, sem diferença '
+        'perceptível na satisfação do cliente.</div>',
+        unsafe_allow_html=True,
+    )
     col_c, col_d = st.columns(2)
     with col_c:
         if "gap_frete_r" in gap_mkt:
@@ -238,6 +336,14 @@ def _modulo_d(vendas: pd.DataFrame, estoque: pd.DataFrame, atendimento: pd.DataF
         st.plotly_chart(fig, use_container_width=True, theme=None)
         st.markdown(theme.stat_tile("Economia anualizada (ChatBot)", theme.fmt_brl(chatbot["economia_anual"]), f"CSAT {chatbot['csat_chatbot']:.2f} vs. {chatbot['csat_humano']:.2f}", "good"), unsafe_allow_html=True)
 
+    st.markdown('<div class="section-title">Implicação · onde a migração pro ChatBot rende mais e o que não é a causa</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="section-sub">Chamados por categoria mostra que <b>{top_categoria}</b> é, de longe, o maior '
+        'volume, o alvo natural da migração para o ChatBot vista acima. CMV por categoria serve para descartar '
+        'uma hipótese: o custo do produto é praticamente igual entre categorias, então não é ele que está '
+        'pressionando a margem.</div>',
+        unsafe_allow_html=True,
+    )
     col_e, col_f = st.columns(2)
     with col_e:
         ac_sorted = atend_cat.sort_values("tickets")
@@ -245,10 +351,10 @@ def _modulo_d(vendas: pd.DataFrame, estoque: pd.DataFrame, atendimento: pd.DataF
         st.plotly_chart(fig, use_container_width=True, theme=None)
     with col_f:
         cmv_cat = cmv["por_categoria"].sort_values()
-        fig = _bar(cmv_cat.values * 100, cmv_cat.index, theme.CAT_VIOLET, f"CMV % por categoria (estável — amplitude {theme.fmt_pct(cmv['amplitude_pp'])})", horizontal=True, height=300, text=[f"{v:.1f}%" for v in cmv_cat.values * 100])
+        fig = _bar(cmv_cat.values * 100, cmv_cat.index, theme.CAT_VIOLET, f"CMV % por categoria (estável, amplitude de {theme.fmt_pct(cmv['amplitude_pp'])})", horizontal=True, height=300, text=[f"{v:.1f}%" for v in cmv_cat.values * 100])
         st.plotly_chart(fig, use_container_width=True, theme=None)
 
-    with st.expander("Memo executivo em texto — gerado automaticamente"):
+    with st.expander("Memo executivo em texto (gerado automaticamente)"):
         memo = _montar_memo(margem, desconto, skus, gap_mkt, chatbot, cmv, data_ini, data_fim)
         st.text_area("memo", memo, height=320, label_visibility="collapsed")
         st.download_button("Baixar memo (.md)", memo, file_name=f"memo_executivo_{data_fim}.md", mime="text/markdown")
@@ -257,15 +363,15 @@ def _modulo_d(vendas: pd.DataFrame, estoque: pd.DataFrame, atendimento: pd.DataF
 def _montar_memo(margem, desconto, skus, gap_mkt, chatbot, cmv, data_ini, data_fim) -> str:
     hoje = datetime.now().strftime("%d/%m/%Y")
     linhas = [
-        f"# Memo executivo — Decisão comercial ({data_ini} a {data_fim})",
-        f"_Gerado em {hoje} pelo Painel Único de Decisão Comercial · Priorizador de margem + Memo executivo_",
+        f"# Memo executivo: Decisão comercial ({data_ini} a {data_fim})",
+        f"_Gerado em {hoje} pelo Painel Único de Decisão Comercial · Priorizador de margem e receita + Memo executivo_",
         "",
         "## Fato",
         f"- Margem contábil: {theme.fmt_brl(margem['contabil'])} ({theme.fmt_pct(margem['pct_contabil'])} da receita líquida)",
         f"- Margem realizada: {theme.fmt_brl(margem['realizado'])} ({theme.fmt_pct(margem['pct_realizado'])} da receita líquida)",
         f"- Desconto concedido no período: {theme.fmt_brl(desconto['total'])} ({theme.fmt_pct(desconto['pct_receita_bruta'])} da receita bruta)",
         f"- SKUs críticos na curva A: {skus['n_criticos']} de {skus['total_curva_a']} ({theme.fmt_pct(skus['pct_da_curva_a'])})",
-        f"- CMV estável em {theme.fmt_pct(cmv['geral'])} (amplitude de {theme.fmt_pct(cmv['amplitude_pp'])} entre categorias — não é driver de margem)",
+        f"- CMV estável em {theme.fmt_pct(cmv['geral'])} (amplitude de {theme.fmt_pct(cmv['amplitude_pp'])} entre categorias, não é driver de margem)",
         "",
         "## Causa",
         f"- {theme.fmt_brl(margem['gap'])} de margem contábil não vira caixa por devolução, cancelamento ou pagamento pendente.",
@@ -276,12 +382,12 @@ def _montar_memo(margem, desconto, skus, gap_mkt, chatbot, cmv, data_ini, data_f
     linhas += [
         "",
         "## Implicação",
-        "- O desconto concedido não compra volume adicional — é margem cedida sem contrapartida.",
+        "- O desconto concedido não compra volume adicional: é margem cedida sem contrapartida.",
         f"- Migrar o atendimento simples para o ChatBot economiza {theme.fmt_brl(chatbot['economia_anual'])}/ano sem perda de qualidade percebida (CSAT {chatbot['csat_chatbot']:.2f} vs. {chatbot['csat_humano']:.2f}).",
         "",
         "## Recomendação",
-        "1. Aplicar o teto de desconto por faixa (ver simulação em Priorizador de margem).",
-        "2. Priorizar reposição dos SKUs críticos listados em Priorizador de margem.",
+        "1. Aplicar o teto de desconto por faixa (ver simulação em Priorizador de margem e receita).",
+        "2. Priorizar reposição dos SKUs críticos listados em Priorizador de margem e receita.",
         "3. Redefinir a métrica de margem reportada à diretoria para a margem realizada.",
         "4. Abrir negociação de frete com o Marketplace.",
         "5. Migrar o volume simples de 'onde está meu pedido' para o ChatBot.",
@@ -292,9 +398,9 @@ def _montar_memo(margem, desconto, skus, gap_mkt, chatbot, cmv, data_ini, data_f
 def _modulo_devolucao(vendas: pd.DataFrame, estoque: pd.DataFrame):
     geral = metrics.devolucao_geral(vendas)
 
-    st.markdown('<div class="section-title">Devolução — causa operacional vs. decisão do cliente</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Devolução: causa operacional vs. decisão do cliente</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="section-sub">Endereçável = defeito, tamanho errado, atraso na entrega — a empresa controla a causa. '
+        '<div class="section-sub">Endereçável = defeito, tamanho errado, atraso na entrega. A empresa controla a causa. '
         'Arrependimento e "não gostei" não entram: é decisão do cliente, não se elimina.</div>',
         unsafe_allow_html=True,
     )
@@ -312,6 +418,10 @@ def _modulo_devolucao(vendas: pd.DataFrame, estoque: pd.DataFrame):
     motivo = metrics.devolucao_por_motivo(vendas)
     fornecedor = metrics.devolucao_por_fornecedor(vendas, estoque)
 
+    st.markdown(
+        '<div class="section-sub">Motivo mostra por que o cliente devolveu; fornecedor mostra de quem cobrar a correção.</div>',
+        unsafe_allow_html=True,
+    )
     cc1, cc2 = st.columns(2)
     with cc1:
         motivo_sorted = motivo.sort_values("margem_perdida")
@@ -342,7 +452,7 @@ def _modulo_devolucao(vendas: pd.DataFrame, estoque: pd.DataFrame):
 
 
 def _modulo_recuperacao(vendas_full: pd.DataFrame):
-    st.markdown('<div class="section-title">Fila priorizada — pedidos com pagamento pendente ou cancelado</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Fila priorizada: pedidos com pagamento pendente ou cancelado</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="section-sub">Arquitetura Planejamento + Reflexão sobre scoring determinístico '
         '(v4/09 e v4/10) · LLM local via Ollama/Gemma, sem tool use</div>',
@@ -357,7 +467,7 @@ def _modulo_recuperacao(vendas_full: pd.DataFrame):
         data_ref = st.date_input(
             "Data de referência da rodada (simula 'hoje')", value=dmax, min_value=dmin, max_value=dmax,
             key="rec_data_ref",
-            help="O data room é um snapshot estático — mover esta data simula rodadas diferentes sobre o mesmo dado, sem precisar de dado novo chegar.",
+            help="O data room é um snapshot estático. Mover esta data simula rodadas diferentes sobre o mesmo dado, sem precisar de dado novo chegar.",
         )
     with c2:
         st.markdown(
@@ -406,12 +516,12 @@ def _modulo_recuperacao(vendas_full: pd.DataFrame):
                 st.markdown(theme.stat_tile("Forma de pagamento", pedido["metodo_pagamento"], pedido["canal"], "neutral"), unsafe_allow_html=True)
 
             st.markdown("**Justificativa executiva**")
-            st.markdown(theme.alert_card(veredito_kind.get(just["veredito"], "info"), just["texto"] or "(sem texto — ver erro abaixo)"), unsafe_allow_html=True)
-            st.caption(f"Reflexão: {just['veredito']} — {just['motivo']}")
+            st.markdown(theme.alert_card(veredito_kind.get(just["veredito"], "info"), just["texto"] or "(sem texto, ver erro abaixo)"), unsafe_allow_html=True)
+            st.caption(f"Reflexão: {just['veredito']} ({just['motivo']})")
 
             st.markdown("**Mensagem ao cliente (rascunho)**")
-            st.markdown(theme.alert_card(veredito_kind.get(msg["veredito"], "info"), msg["texto"] or "(sem texto — ver erro abaixo)"), unsafe_allow_html=True)
-            st.caption(f"Reflexão: {msg['veredito']} — {msg['motivo']}")
+            st.markdown(theme.alert_card(veredito_kind.get(msg["veredito"], "info"), msg["texto"] or "(sem texto, ver erro abaixo)"), unsafe_allow_html=True)
+            st.caption(f"Reflexão: {msg['veredito']} ({msg['motivo']})")
 
             if pacote["erro"]:
                 st.error(pacote["erro"])

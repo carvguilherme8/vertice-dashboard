@@ -67,6 +67,7 @@ def style_fig(fig, **overrides):
 
 
 def inject_base_css():
+    tint_blue = hex_to_rgba(CAT_BLUE, 0.08)
     css = f"""
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -102,7 +103,6 @@ def inject_base_css():
         .dot {{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }}
 
         /* cartão de alerta discreto (substitui st.error/warning/info padrão) */
-        .alert-row {{ display:flex; gap:10px; margin: 8px 0 4px; flex-wrap: wrap; }}
         .alert-card {{
             flex: 1 1 240px; background:{SURFACE}; border:1px solid {BORDER}; border-left:3px solid var(--ac, {MUTED});
             border-radius: 8px; padding: 8px 12px; font-size: 12px; line-height: 1.35; color:{INK_2};
@@ -115,8 +115,25 @@ def inject_base_css():
         .section-title {{ font-size: 14px; font-weight: 700; color:{INK}; margin: 14px 0 1px; display:flex; align-items:center; gap:8px; }}
         .section-sub {{ font-size: 11.5px; color:{MUTED}; margin: 0 0 6px; }}
 
-        div[data-testid="stTabs"] button[data-baseweb="tab"] {{ font-weight: 600; font-size: 13.5px; color: {INK_2}; padding-top: 6px; padding-bottom: 6px; }}
-        div[data-testid="stTabs"] button[aria-selected="true"] {{ color: {CAT_BLUE}; }}
+        /* barra de abas: pills numa cor só (azul do app), sem diferenciar por módulo */
+        div[data-testid="stTabs"] [data-baseweb="tab-highlight"] {{ background-color: transparent !important; }}
+        div[data-testid="stTabs"] {{ width: 100% !important; margin-top: 22px; }}
+        div[data-testid="stTabs"] [role="tablist"] {{ display: flex !important; width: 100% !important; gap: 6px; }}
+        div[data-testid="stTabs"] button[data-baseweb="tab"] {{
+            flex: 1 1 0 !important; width: auto !important; justify-content: center; white-space: nowrap;
+            font-weight: 600; font-size: 13px; color: {INK_2}; cursor: pointer;
+            padding: 9px 14px 10px; border-radius: 8px; background: {SURFACE};
+            border: 1px solid {BORDER}; border-bottom: 3px solid {BORDER};
+            box-shadow: 0 1px 2px rgba(17,24,39,.05);
+            transition: background .12s ease, color .12s ease, box-shadow .12s ease, transform .12s ease;
+        }}
+        div[data-testid="stTabs"] button[data-baseweb="tab"]:hover {{
+            background: {PAGE_BG}; color: {INK}; box-shadow: 0 3px 6px rgba(17,24,39,.10); transform: translateY(-1px);
+        }}
+        div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {{
+            color: {CAT_BLUE}; background: {tint_blue}; border-color: {CAT_BLUE};
+            font-weight: 700; box-shadow: 0 3px 8px rgba(17,24,39,.14); transform: translateY(-1px);
+        }}
         div[data-testid="stDataFrame"] {{ border: 1px solid {BORDER}; border-radius: 8px; }}
         div[data-testid="stVerticalBlockBorderWrapper"] {{ margin-bottom: 0.3rem; }}
         div.element-container {{ margin-bottom: 0.35rem; }}
@@ -127,6 +144,26 @@ def inject_base_css():
             padding: 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(17,24,39,.04);
         }}
         div[data-testid="stPlotlyChart"] svg text {{ font-weight: 700 !important; }}
+
+        /* cartão do guia de abas (aba "Guia do painel") */
+        div[data-testid="column"]:has(.guide-card) {{ display: flex; }}
+        div[data-testid="column"]:has(.guide-card) > div {{ display: flex; flex-direction: column; width: 100%; }}
+        div[data-testid="column"]:has(.guide-card) div.element-container:has(.guide-card) {{ flex: 1; display: flex; }}
+        .guide-card {{
+            background: {SURFACE}; border: 1px solid {BORDER}; border-top: 6px solid {CAT_BLUE};
+            border-radius: 10px; padding: 14px 16px 16px; margin-bottom: 8px; width: 100%; box-sizing: border-box;
+            box-shadow: 0 1px 2px rgba(17,24,39,.04);
+        }}
+        .guide-card-head {{ display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }}
+        .guide-card-num {{
+            display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+            width: 22px; height: 22px; border-radius: 50%; background: {CAT_BLUE};
+            color: #fff; font-size: 11.5px; font-weight: 700;
+        }}
+        .guide-card-title {{ font-size: 15px; font-weight: 700; color: {INK}; }}
+        .guide-card-label {{ font-size: 10.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: {MUTED}; margin: 10px 0 2px; }}
+        .guide-card-label:first-of-type {{ margin-top: 0; }}
+        .guide-card-text {{ font-size: 12.5px; line-height: 1.5; color: {INK_2}; }}
         </style>
         """
     # Colapsa para uma única linha, sem quebras: uma linha em branco no meio de
@@ -185,6 +222,22 @@ def stat_tile(label: str, value: str, delta: str | None = None, delta_kind: str 
 
 def alert_card(kind: str, text: str) -> str:
     return f'<div class="alert-card {kind}">{text}</div>'
+
+
+def guide_card(accent: str, numero: str, titulo: str, funcao: str, problema: str) -> str:
+    bg = hex_to_rgba(accent, 0.07)
+    return (
+        f'<div class="guide-card" style="border-top-color:{accent};background-color:{bg};">'
+        '<div class="guide-card-head">'
+        f'<span class="guide-card-num" style="background-color:{accent};">{numero}</span>'
+        f'<span class="guide-card-title">{titulo}</span>'
+        "</div>"
+        '<div class="guide-card-label">O que faz</div>'
+        f'<div class="guide-card-text">{funcao}</div>'
+        '<div class="guide-card-label">Problema de negócio que resolve</div>'
+        f'<div class="guide-card-text">{problema}</div>'
+        "</div>"
+    )
 
 
 def hex_to_rgba(hex_color: str, alpha: float = 0.08) -> str:
