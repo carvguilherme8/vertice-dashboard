@@ -115,11 +115,12 @@ def inject_base_css():
         .section-title {{ font-size: 14px; font-weight: 700; color:{INK}; margin: 14px 0 1px; display:flex; align-items:center; gap:8px; }}
         .section-sub {{ font-size: 11.5px; color:{MUTED}; margin: 0 0 6px; }}
 
-        /* barra de abas: pills numa cor só (azul do app), sem diferenciar por módulo */
-        div[data-testid="stTabs"] [data-baseweb="tab-highlight"] {{ background-color: transparent !important; }}
-        div[data-testid="stTabs"] {{ width: 100% !important; margin-top: 22px; }}
-        div[data-testid="stTabs"] [role="tablist"] {{ display: flex !important; width: 100% !important; gap: 6px; }}
-        div[data-testid="stTabs"] button[data-baseweb="tab"] {{
+        /* barra de abas: pills numa cor só (azul do app), sem diferenciar por módulo.
+           Seletores sem qualificador de tag (div/button) de propósito — o Streamlit
+           trocou a biblioteca dos componentes de abas entre versões e a tag mudou. */
+        [data-testid="stTabs"] {{ width: 100% !important; margin-top: 22px; }}
+        [data-testid="stTabs"] [role="tablist"] {{ display: flex !important; width: 100% !important; gap: 6px; }}
+        [data-testid="stTabs"] [data-testid="stTab"] {{
             flex: 1 1 0 !important; width: auto !important; justify-content: center; white-space: nowrap;
             font-weight: 600; font-size: 13px; color: {INK_2}; cursor: pointer;
             padding: 9px 14px 10px; border-radius: 8px; background: {SURFACE};
@@ -127,13 +128,14 @@ def inject_base_css():
             box-shadow: 0 1px 2px rgba(17,24,39,.05);
             transition: background .12s ease, color .12s ease, box-shadow .12s ease, transform .12s ease;
         }}
-        div[data-testid="stTabs"] button[data-baseweb="tab"]:hover {{
+        [data-testid="stTabs"] [data-testid="stTab"]:hover {{
             background: {PAGE_BG}; color: {INK}; box-shadow: 0 3px 6px rgba(17,24,39,.10); transform: translateY(-1px);
         }}
-        div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {{
+        [data-testid="stTabs"] [data-testid="stTab"][aria-selected="true"] {{
             color: {CAT_BLUE}; background: {tint_blue}; border-color: {CAT_BLUE};
             font-weight: 700; box-shadow: 0 3px 8px rgba(17,24,39,.14); transform: translateY(-1px);
         }}
+        [data-testid="stTabsScrollLeft"], [data-testid="stTabsScrollRight"] {{ display: none; }}
         div[data-testid="stDataFrame"] {{ border: 1px solid {BORDER}; border-radius: 8px; }}
         div[data-testid="stVerticalBlockBorderWrapper"] {{ margin-bottom: 0.3rem; }}
         div.element-container {{ margin-bottom: 0.35rem; }}
