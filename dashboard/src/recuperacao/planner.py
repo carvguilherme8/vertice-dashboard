@@ -74,40 +74,64 @@ def _contexto_para_reflexao(contexto: dict) -> dict:
     return {**contexto, "receita_liquida": _num_br(contexto["receita_liquida"])}
 
 
-def _com_reflexao(gerar_fn, contexto: dict, cfg: dict, max_regeneracoes: int) -> dict:
+def _com_reflexao(gerar_fn, contexto: dict, cfg: dict, max_regeneracoes: int, rotulo: str = "", on_progress=None) -> dict:
+    def _avisar(msg: str) -> None:
+        if on_progress:
+            on_progress(f"{contexto['order_id']} · {rotulo}: {msg}" if rotulo else f"{contexto['order_id']}: {msg}")
+
     contexto_reflexao = _contexto_para_reflexao(contexto)
+    _avisar("gerando...")
     texto = gerar_fn(contexto, cfg)
     veredito = reflexao.avaliar(texto, contexto_reflexao, cfg["llm"])
+    _avisar(f"reflexão → {veredito.veredito} ({veredito.motivo})")
     tentativas = 0
     while veredito.veredito == "rejeitado" and tentativas < max_regeneracoes:
+        _avisar("reprovado, regenerando...")
         texto = gerar_fn(contexto, cfg)
         veredito = reflexao.avaliar(texto, contexto_reflexao, cfg["llm"])
         tentativas += 1
+        _avisar(f"reflexão (regeneração {tentativas}) → {veredito.veredito} ({veredito.motivo})")
     revisao_humana_intensa = veredito.veredito == "rejeitado" and tentativas >= max_regeneracoes
     return {"texto": texto, "veredito": veredito.veredito, "motivo": veredito.motivo, "revisao_humana_intensa": revisao_humana_intensa}
 
 
-def executar_rodada(vendas: pd.DataFrame, data_referencia, cfg: dict) -> list[dict]:
+def executar_rodada(vendas: pd.DataFrame, data_referencia, cfg: dict, top_n: int | None = None, on_progress=None) -> list[dict]:
     """Sequência fixa: ingestão -> scoring -> top-N -> por pedido: contexto ->
-    justificativa -> mensagem -> reflexão (com regeneração condicional)."""
+    justificativa -> mensagem -> reflexão (com regeneração condicional).
+
+    `top_n` sobrepõe cfg["fila"]["top_n"] só nesta execução (ex.: um seletor
+    na UI para testar com poucos pedidos sem editar a política em YAML) — não
+    pode passar do teto declarado na política, só reduzir.
+    `on_progress(str)`, se passado, recebe uma linha de log por evento (chamada
+    ao LLM, veredito da reflexão) — usado pela UI para mostrar progresso ao
+    vivo; o planner continua puro/testável sem Streamlit quando omitido."""
+    teto = cfg["fila"]["top_n"]
+    n = min(top_n, teto) if top_n is not None else teto
+
     fila = ingestao.montar_fila(vendas, data_referencia, cfg["ingestao"]["janela_dias"])
     fila = scoring.pontuar(fila, cfg["scoring"])
-    top_n = fila.head(cfg["fila"]["top_n"])
+    top_n_fila = fila.head(n)
 
     pacotes = []
-    for _, pedido in top_n.iterrows():
+    for _, pedido in top_n_fila.iterrows():
         contexto = _montar_contexto(pedido)
+        if on_progress:
+            on_progress(f"{contexto['order_id']}: iniciando (score {contexto['score']:.2f})")
         try:
             just = _com_reflexao(
-                lambda ctx, c: _gerar_justificativa(ctx, c["llm"]), contexto, cfg, cfg["reflexao"]["max_regeneracoes"]
+                lambda ctx, c: _gerar_justificativa(ctx, c["llm"]), contexto, cfg, cfg["reflexao"]["max_regeneracoes"],
+                rotulo="justificativa", on_progress=on_progress,
             )
             msg = _com_reflexao(
-                lambda ctx, c: _gerar_mensagem(ctx, c["politica"], c["llm"]), contexto, cfg, cfg["reflexao"]["max_regeneracoes"]
+                lambda ctx, c: _gerar_mensagem(ctx, c["politica"], c["llm"]), contexto, cfg, cfg["reflexao"]["max_regeneracoes"],
+                rotulo="mensagem", on_progress=on_progress,
             )
             erro = None
         except LLMIndisponivel as exc:
             just = msg = {"texto": "", "veredito": "rejeitado", "motivo": str(exc), "revisao_humana_intensa": True}
             erro = str(exc)
+            if on_progress:
+                on_progress(f"{contexto['order_id']}: LLM indisponível — {exc}")
 
         pacotes.append({"pedido": contexto, "justificativa": just, "mensagem": msg, "erro": erro})
 

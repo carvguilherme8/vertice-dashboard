@@ -455,14 +455,15 @@ def _modulo_recuperacao(vendas_full: pd.DataFrame):
     st.markdown('<div class="section-title">Fila priorizada: pedidos com pagamento pendente ou cancelado</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="section-sub">Arquitetura Planejamento + Reflexão sobre scoring determinístico '
-        '(v4/09 e v4/10) · LLM local via Ollama/Gemma, sem tool use</div>',
+        '(v4/09 e v4/10) · LLM via provedor configurável, sem tool use</div>',
         unsafe_allow_html=True,
     )
 
     cfg = carregar_config()
     dmin, dmax = vendas_full["data_pedido"].min().date(), vendas_full["data_pedido"].max().date()
+    teto_top_n = cfg["fila"]["top_n"]
 
-    c1, c2 = st.columns([1, 3])
+    c1, c2, c3 = st.columns([1, 1, 2])
     with c1:
         data_ref = st.date_input(
             "Data de referência da rodada (simula 'hoje')", value=dmax, min_value=dmin, max_value=dmax,
@@ -470,20 +471,30 @@ def _modulo_recuperacao(vendas_full: pd.DataFrame):
             help="O data room é um snapshot estático. Mover esta data simula rodadas diferentes sobre o mesmo dado, sem precisar de dado novo chegar.",
         )
     with c2:
+        top_n_rodada = st.number_input(
+            "Pedidos nesta rodada", min_value=1, max_value=teto_top_n, value=min(3, teto_top_n),
+            key="rec_top_n",
+            help=f"Cada pedido pode disparar até 8 chamadas ao LLM (geração + reflexão, com 1 regeneração possível). "
+                 f"Teto definido em recuperacao.yaml (fila.top_n = {teto_top_n}) — reduza aqui para testar gastando menos.",
+        )
+    with c3:
         provider = cfg["llm"].get("provider", "ollama")
         origem = f"API Sandbox EloAgents ({cfg['llm']['api_base']})" if provider == "eloagents" else f"Ollama local ({cfg['llm']['host']})"
         st.markdown(
             f'<div style="padding-top:28px;color:{theme.MUTED};font-size:12.5px;">'
             f'Modelo: <b>{cfg["llm"]["model"]}</b> via {origem} · '
-            f'janela {cfg["ingestao"]["janela_dias"]} dias · top {cfg["fila"]["top_n"]} pedidos/rodada</div>',
+            f'janela {cfg["ingestao"]["janela_dias"]} dias · até {8 * top_n_rodada} chamadas nesta rodada</div>',
             unsafe_allow_html=True,
         )
 
     if st.button("Gerar fila da rodada", key="rec_gerar"):
-        with st.spinner("Rodando scoring + justificativa/mensagem + reflexão..."):
+        with st.status("Rodando scoring + justificativa/mensagem + reflexão...", expanded=True) as status:
             try:
-                st.session_state["rec_pacotes"] = planner.executar_rodada(vendas_full, data_ref, cfg)
+                st.session_state["rec_pacotes"] = planner.executar_rodada(
+                    vendas_full, data_ref, cfg, top_n=top_n_rodada, on_progress=status.write,
+                )
                 st.session_state.setdefault("rec_contatados", set())
+                status.update(label="Rodada concluída.", state="complete")
             except LLMIndisponivel as exc:
                 st.session_state["rec_pacotes"] = []
                 dica = (
@@ -491,6 +502,7 @@ def _modulo_recuperacao(vendas_full: pd.DataFrame):
                     if provider == "eloagents"
                     else f"rode `ollama serve` e confirme que o modelo `{cfg['llm']['model']}` foi baixado (`ollama pull {cfg['llm']['model']}`)"
                 )
+                status.update(label="Falhou.", state="error")
                 st.error(f"LLM não respondeu: {exc}\n\n{dica.capitalize()}.")
 
     pacotes = st.session_state.get("rec_pacotes")

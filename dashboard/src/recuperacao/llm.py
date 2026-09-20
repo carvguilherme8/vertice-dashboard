@@ -94,7 +94,22 @@ def gerar_texto(prompt: str, cfg_llm: dict) -> str:
     return _chat_ollama(prompt, cfg_llm["model"], cfg_llm["host"], cfg_llm.get("temperatura", 0.2), formato_json=False)
 
 
+def _limpar_json(texto: str) -> str:
+    """Alguns modelos (ex.: gemini via Sandbox EloAgents) embrulham a saída em
+    cerca de código markdown (```json ... ```) mesmo quando o prompt pede JSON
+    puro — o Ollama com format="json" não faz isso, então só aparecia com o
+    provider eloagents. Extrai o primeiro objeto {...} do texto; se não achar
+    chaves, devolve o texto original e deixa a validação pydantic reprovar
+    (mesmo comportamento fail-closed de sempre)."""
+    inicio, fim = texto.find("{"), texto.rfind("}")
+    if inicio != -1 and fim > inicio:
+        return texto[inicio:fim + 1]
+    return texto
+
+
 def gerar_json(prompt: str, cfg_llm: dict) -> str:
     if cfg_llm.get("provider", "ollama") == "eloagents":
-        return _chat_eloagents(prompt, cfg_llm["model"], cfg_llm["api_base"], cfg_llm.get("temperatura", 0.2))
-    return _chat_ollama(prompt, cfg_llm["model"], cfg_llm["host"], cfg_llm.get("temperatura", 0.2), formato_json=True)
+        bruto = _chat_eloagents(prompt, cfg_llm["model"], cfg_llm["api_base"], cfg_llm.get("temperatura", 0.2))
+    else:
+        bruto = _chat_ollama(prompt, cfg_llm["model"], cfg_llm["host"], cfg_llm.get("temperatura", 0.2), formato_json=True)
+    return _limpar_json(bruto)
