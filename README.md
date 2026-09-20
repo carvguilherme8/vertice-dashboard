@@ -4,7 +4,7 @@ Dashboard Streamlit do case Vértice (bootcamp EloGroup): margem, desconto, esto
 
 ## Abas
 
-- **Recuperação de receita pós-venda** — fila priorizada de pedidos com pagamento pendente/cancelado (scoring determinístico + justificativa e mensagem geradas por LLM local via Ollama, com reflexão de passe único antes de qualquer texto chegar ao operador).
+- **Recuperação de receita pós-venda** — fila priorizada de pedidos com pagamento pendente/cancelado (scoring determinístico + justificativa e mensagem geradas por LLM, com reflexão de passe único antes de qualquer texto chegar ao operador). Provedor de LLM plugável: API Sandbox EloAgents (padrão) ou Ollama local — ver `dashboard/config/recuperacao.yaml`.
 - **Prevenção de devolução na origem** — devolução por motivo (endereçável vs. decisão do cliente), por fornecedor e por SKU.
 - **Priorizador de margem e receita** — guardrail de teto de desconto (margem) e reposição de SKUs críticos (receita em risco por ruptura).
 - **Memo executivo** — relatório Fato/Causa/Implicação/Recomendação gerado a partir dos KPIs, com download em `.md`.
@@ -16,11 +16,13 @@ pip install -r dashboard/requirements.txt
 streamlit run dashboard/app.py
 ```
 
-A aba "Recuperação de receita pós-venda" precisa de [Ollama](https://ollama.com) rodando localmente com um modelo Gemma baixado:
+A aba "Recuperação de receita pós-venda" precisa de um provedor de LLM configurado em `dashboard/config/recuperacao.yaml` (`llm.provider`):
 
-```bash
-ollama pull gemma3:4b   # ou outro tamanho — ajuste em dashboard/config/recuperacao.yaml
-```
+- **`eloagents`** (padrão) — API Sandbox da EloGroup, mesmo endpoint/modelo usados na `Aula07_Pratica.ipynb`. Copie `dashboard/.streamlit/secrets.toml.example` para `dashboard/.streamlit/secrets.toml` e preencha `ELOAGENTS_API_KEY` (esse arquivo nunca é versionado). No deploy, a mesma chave vai em "Manage app" → "Settings" → "Secrets" do Streamlit Cloud.
+- **`ollama`** — modelo local, sem custo e sem dado saindo do ambiente:
+  ```bash
+  ollama pull gemma3:4b   # ou outro tamanho — ajuste model/host em recuperacao.yaml
+  ```
 
 ## Testes
 

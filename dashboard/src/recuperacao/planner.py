@@ -10,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 
 from . import ingestao, reflexao, scoring
-from .llm import OllamaIndisponivel, gerar_texto
+from .llm import LLMIndisponivel, gerar_texto
 
 PROMPTS_DIR = Path(__file__).resolve().parents[2] / "prompts"
 
@@ -48,7 +48,7 @@ def _gerar_justificativa(contexto: dict, cfg_llm: dict) -> str:
     template = (PROMPTS_DIR / "justificativa.md").read_text(encoding="utf-8")
     campos = {**contexto, "receita_liquida": _num_br(contexto["receita_liquida"])}
     prompt = template.format(**campos)
-    return gerar_texto(prompt, cfg_llm["model"], cfg_llm["host"], cfg_llm.get("temperatura", 0.2))
+    return gerar_texto(prompt, cfg_llm)
 
 
 def _gerar_mensagem(contexto: dict, cfg_politica: dict, cfg_llm: dict) -> str:
@@ -63,7 +63,7 @@ def _gerar_mensagem(contexto: dict, cfg_politica: dict, cfg_llm: dict) -> str:
         "instrucao_situacao": INSTRUCAO_SITUACAO.get(status, ""),
     }
     prompt = template.format(**campos)
-    return gerar_texto(prompt, cfg_llm["model"], cfg_llm["host"], cfg_llm.get("temperatura", 0.2))
+    return gerar_texto(prompt, cfg_llm)
 
 
 def _contexto_para_reflexao(contexto: dict) -> dict:
@@ -105,7 +105,7 @@ def executar_rodada(vendas: pd.DataFrame, data_referencia, cfg: dict) -> list[di
                 lambda ctx, c: _gerar_mensagem(ctx, c["politica"], c["llm"]), contexto, cfg, cfg["reflexao"]["max_regeneracoes"]
             )
             erro = None
-        except OllamaIndisponivel as exc:
+        except LLMIndisponivel as exc:
             just = msg = {"texto": "", "veredito": "rejeitado", "motivo": str(exc), "revisao_humana_intensa": True}
             erro = str(exc)
 

@@ -38,9 +38,15 @@ politica:
     default: "cordial e direto, sem soar como cobrança"
 
 llm:
-  provider: ollama
-  host: "http://localhost:11434"
-  model: "gemma3:4b"        # já baixado neste ambiente (`ollama list`); trocar se usar outro tamanho
+  # "eloagents" = API Sandbox da EloGroup (mesma chave/endpoint da
+  # Aula07_Pratica.ipynb); "ollama" = modelo local, sem custo e sem dado
+  # saindo do ambiente (ver dashboard/src/recuperacao/llm.py). A chave da
+  # Sandbox nunca fica aqui — vem de dashboard/.streamlit/secrets.toml
+  # (local, gitignored) ou dos Secrets do app no Streamlit Cloud (deploy).
+  provider: eloagents
+  model: "openai/gemini-3-flash-preview"  # modelo leve (flash) da Sandbox — não trocar por um mais pesado sem necessidade
+  api_base: "https://chat.eloagents.click/api"  # usado só quando provider = eloagents
+  host: "http://localhost:11434"                # usado só quando provider = ollama
   temperatura: 0.2
 
 reflexao:

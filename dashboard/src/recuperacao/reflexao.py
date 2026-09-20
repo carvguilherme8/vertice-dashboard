@@ -29,7 +29,7 @@ def avaliar(texto: str, contexto: dict, cfg_llm: dict) -> Veredito:
     prompt = template.format(contexto_json=json.dumps(contexto, ensure_ascii=False, default=str), texto=texto)
 
     try:
-        bruto = llm.gerar_json(prompt, cfg_llm["model"], cfg_llm["host"], cfg_llm.get("temperatura", 0.2))
+        bruto = llm.gerar_json(prompt, cfg_llm)
         return Veredito.model_validate_json(bruto)
-    except (json.JSONDecodeError, ValidationError, llm.OllamaIndisponivel) as exc:
+    except (json.JSONDecodeError, ValidationError, llm.LLMIndisponivel) as exc:
         return Veredito(veredito="rejeitado", motivo=f"reflexão indisponível ou saída inválida: {exc}")

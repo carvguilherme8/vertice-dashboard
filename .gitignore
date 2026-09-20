@@ -8,6 +8,7 @@ v3/
 v4/
 Case Vértice 1.html
 Projeto_Vertice.ipynb
+Aula07_Pratica.ipynb
 
 # artefatos de build/execução
 __pycache__/
@@ -18,4 +19,6 @@ data/logs/
 
 # ferramentas locais
 .claude/
-.streamlit/secrets.toml
+
+# segredos — nunca versionados (chave da API Sandbox EloAgents fica só aqui)
+**/.streamlit/secrets.toml

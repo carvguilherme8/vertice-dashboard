@@ -8,7 +8,7 @@ from src import metrics, theme
 from src.data import filtrar_vendas, load_all
 from src.recuperacao import planner, registro
 from src.recuperacao.config import carregar_config
-from src.recuperacao.llm import OllamaIndisponivel
+from src.recuperacao.llm import LLMIndisponivel
 
 
 # --------------------------------------------------------------- chart utils
@@ -470,9 +470,11 @@ def _modulo_recuperacao(vendas_full: pd.DataFrame):
             help="O data room é um snapshot estático. Mover esta data simula rodadas diferentes sobre o mesmo dado, sem precisar de dado novo chegar.",
         )
     with c2:
+        provider = cfg["llm"].get("provider", "ollama")
+        origem = f"API Sandbox EloAgents ({cfg['llm']['api_base']})" if provider == "eloagents" else f"Ollama local ({cfg['llm']['host']})"
         st.markdown(
             f'<div style="padding-top:28px;color:{theme.MUTED};font-size:12.5px;">'
-            f'Modelo: <b>{cfg["llm"]["model"]}</b> via Ollama ({cfg["llm"]["host"]}) · '
+            f'Modelo: <b>{cfg["llm"]["model"]}</b> via {origem} · '
             f'janela {cfg["ingestao"]["janela_dias"]} dias · top {cfg["fila"]["top_n"]} pedidos/rodada</div>',
             unsafe_allow_html=True,
         )
@@ -482,12 +484,14 @@ def _modulo_recuperacao(vendas_full: pd.DataFrame):
             try:
                 st.session_state["rec_pacotes"] = planner.executar_rodada(vendas_full, data_ref, cfg)
                 st.session_state.setdefault("rec_contatados", set())
-            except OllamaIndisponivel as exc:
+            except LLMIndisponivel as exc:
                 st.session_state["rec_pacotes"] = []
-                st.error(
-                    f"Ollama não respondeu: {exc}\n\nRode `ollama serve` e confirme que o modelo "
-                    f"`{cfg['llm']['model']}` foi baixado (`ollama pull {cfg['llm']['model']}`)."
+                dica = (
+                    "confirme a ELOAGENTS_API_KEY nos Secrets do app e o limite da Sandbox"
+                    if provider == "eloagents"
+                    else f"rode `ollama serve` e confirme que o modelo `{cfg['llm']['model']}` foi baixado (`ollama pull {cfg['llm']['model']}`)"
                 )
+                st.error(f"LLM não respondeu: {exc}\n\n{dica.capitalize()}.")
 
     pacotes = st.session_state.get("rec_pacotes")
     if pacotes is None:
