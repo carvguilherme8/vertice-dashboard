@@ -12,6 +12,15 @@ Dois entregáveis do case Vértice (bootcamp EloGroup), cada um com seu propósi
 - **Priorizador de margem e receita** — guardrail de teto de desconto (margem) e reposição de SKUs críticos (receita em risco por ruptura).
 - **Memo executivo** — relatório Fato/Causa/Implicação/Recomendação gerado a partir dos KPIs, com download em `.md`.
 
+## Requisitos
+
+Python 3.11 ou 3.12. Evite 3.13+ por enquanto — algumas dependências transitivas (ex. `pydantic-core`, via `pydantic`/`litellm`) ainda não têm wheel pronta pra versões muito novas do Python, e o `pip install` cai numa compilação a partir do código-fonte que exige Rust/Cargo instalado na máquina.
+
+```bash
+py -3.11 -m venv .venv
+.venv\Scripts\activate
+```
+
 ## Rodando localmente
 
 ```bash
