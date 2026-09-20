@@ -1,0 +1,13 @@
+# Dependências pra deploy do Dashboard de Gestão (dash_gestao/) no Plotly Cloud.
+# Fica na raiz do repo de propósito: dash_gestao/app.py não é autocontido —
+# reaproveita dashboard/src/metrics.py e theme.py (mesma fonte de verdade do
+# Painel Único), então o projeto publicado precisa ser o repo inteiro, não só
+# a pasta dash_gestao/. streamlit entra aqui só como dependência transitiva:
+# dashboard/src/theme.py e data.py importam streamlit no topo do módulo
+# (usado por @st.cache_data e pelas funções de UI do Painel Único), mesmo que
+# o Dash nunca chame nenhuma dessas funções — o import falha sem o pacote.
+dash>=2.16
+pandas>=2.1
+plotly>=5.19
+pyarrow>=14
+streamlit>=1.64

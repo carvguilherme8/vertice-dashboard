@@ -35,6 +35,16 @@ def atendimento_por_categoria(atendimento: pd.DataFrame) -> pd.DataFrame:
     return g
 
 
+def atendimento_por_canal(atendimento: pd.DataFrame) -> pd.DataFrame:
+    g = (
+        atendimento.groupby("canal_entrada")
+        .agg(tickets=("ticket_id", "count"), custo_medio=("custo_operacional_ticket", "mean"))
+        .reset_index()
+        .sort_values("tickets", ascending=False)
+    )
+    return g
+
+
 # ---------------------------------------------------------------- margem ----
 def margem_realizada(vendas: pd.DataFrame) -> dict:
     contabil = float(vendas["margem_contribuicao"].sum())
@@ -129,6 +139,15 @@ def skus_criticos_curva_a(merged: pd.DataFrame, vendas: pd.DataFrame) -> dict:
     }
 
 
+def skus_criticos_por_categoria(merged: pd.DataFrame) -> pd.DataFrame:
+    """Onde priorizar reposição primeiro: SKUs da curva A (80% da receita) que
+    também estão em ruptura ou abaixo do ponto de pedido, por categoria."""
+    criticos = merged[(merged["curva"] == "A") & merged["critico"]]
+    return (
+        criticos.groupby("categoria").size().rename("n_criticos").reset_index().sort_values("n_criticos", ascending=False)
+    )
+
+
 def estoque_parado(estoque: pd.DataFrame) -> dict:
     hoje = pd.Timestamp.today()
     dias_parado = (hoje - estoque["data_ultima_entrada"]).dt.days
@@ -137,6 +156,13 @@ def estoque_parado(estoque: pd.DataFrame) -> dict:
         "pct_parado_2anos": float(parado_2anos.mean()),
         "n_parado_2anos": int(parado_2anos.sum()),
     }
+
+
+def estoque_parado_por_categoria(estoque: pd.DataFrame) -> pd.DataFrame:
+    e = estoque.copy()
+    hoje = pd.Timestamp.today()
+    e["parado_2anos"] = (hoje - e["data_ultima_entrada"]).dt.days > 730
+    return e.groupby("categoria")["parado_2anos"].mean().rename("pct_parado_2anos").reset_index().sort_values("pct_parado_2anos", ascending=False)
 
 
 # --------------------------------------------------------------- canais -----
@@ -174,6 +200,16 @@ def gap_marketplace(vendas: pd.DataFrame) -> dict:
     }
 
 
+def margem_por_categoria(vendas: pd.DataFrame) -> pd.DataFrame:
+    g = (
+        vendas.groupby("categoria")
+        .agg(receita_liquida=("receita_liquida", "sum"), margem=("margem_contribuicao", "sum"))
+        .reset_index()
+    )
+    g["margem_pct"] = g["margem"] / g["receita_liquida"]
+    return g.sort_values("margem_pct")
+
+
 def cmv_estabilidade(vendas: pd.DataFrame) -> dict:
     geral = vendas["custo_produto"].sum() / vendas["receita_bruta"].sum()
     g = vendas.groupby("categoria")[["custo_produto", "receita_bruta"]].sum()
@@ -201,6 +237,12 @@ def devolucao_geral(vendas: pd.DataFrame) -> dict:
         "margem_perdida_enderecavel": float(enderecavel["margem_contribuicao"].sum()),
         "margem_perdida_nao_enderecavel": float(dev.loc[~dev.index.isin(enderecavel.index), "margem_contribuicao"].sum()),
     }
+
+
+def devolucao_por_canal(vendas: pd.DataFrame) -> pd.DataFrame:
+    g = vendas.groupby("canal").agg(pedidos=("order_id", "count"), devolvidos=("devolvido", "sum")).reset_index()
+    g["taxa_devolucao"] = g["devolvidos"] / g["pedidos"]
+    return g.sort_values("taxa_devolucao", ascending=False)
 
 
 def devolucao_por_motivo(vendas: pd.DataFrame) -> pd.DataFrame:
@@ -295,6 +337,48 @@ def integridade_marketing(vendas: pd.DataFrame, marketing: pd.DataFrame) -> dict
         "pedidos_reais": n_pedidos,
         "multiplicador_conversoes": conv_marketing / n_pedidos if n_pedidos else float("nan"),
     }
+
+
+# ------------------------------------------------------------- clientes -----
+# clientes.parquet é usado como cadastro autocontido — vendas.customer_id não
+# identifica cliente de forma confiável (1 ID concentra 40,6% dos pedidos; ver
+# notebooks drive/01_qualidade_dados.ipynb, seção 5), então estes números NUNCA
+# cruzam com vendas.csv, só resumem a base de clientes isoladamente.
+SEGMENTOS_RISCO = ("Em Risco", "Churn", "Hibernando")
+
+
+def clientes_kpis(clientes: pd.DataFrame) -> dict:
+    em_risco = clientes["segmento_rfm"].isin(SEGMENTOS_RISCO)
+    return {
+        "n_clientes": int(len(clientes)),
+        "ltv_medio": float(clientes["ltv_acumulado"].mean()),
+        "ltv_total": float(clientes["ltv_acumulado"].sum()),
+        "pct_em_risco": float(em_risco.mean()),
+        "ltv_em_risco": float(clientes.loc[em_risco, "ltv_acumulado"].sum()),
+    }
+
+
+def clientes_por_segmento(clientes: pd.DataFrame) -> pd.DataFrame:
+    g = (
+        clientes.groupby("segmento_rfm")
+        .agg(n_clientes=("customer_id", "count"), ltv_total=("ltv_acumulado", "sum"), ltv_medio=("ltv_acumulado", "mean"))
+        .reset_index()
+        .sort_values("ltv_total", ascending=False)
+    )
+    return g
+
+
+FIDELIDADE_ORDEM = ["Bronze", "Silver", "Gold", "Platinum"]
+
+
+def clientes_por_fidelidade(clientes: pd.DataFrame) -> pd.DataFrame:
+    g = (
+        clientes.groupby("nivel_fidelidade")
+        .agg(n_clientes=("customer_id", "count"), ltv_medio=("ltv_acumulado", "mean"))
+        .reindex(FIDELIDADE_ORDEM)
+        .reset_index()
+    )
+    return g
 
 
 # ------------------------------------------------------- guardrail (regra) --

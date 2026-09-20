@@ -25,7 +25,13 @@ def load_all() -> dict[str, pd.DataFrame]:
 
 
 def filtrar_vendas(vendas: pd.DataFrame, data_ini, data_fim, canais: list[str]) -> pd.DataFrame:
-    out = vendas[(vendas["data_pedido"] >= pd.Timestamp(data_ini)) & (vendas["data_pedido"] <= pd.Timestamp(data_fim))]
+    # data_fim é uma data (sem hora) — comparar com "<=" truncaria pra meia-noite
+    # do último dia e descartaria todo pedido feito depois das 00:00 nesse dia
+    # (era o caso dos 28 pedidos de 26/01/2024, o último dia da base: sumiam do
+    # filtro padrão "período inteiro" sem nenhum aviso). "<" do dia seguinte
+    # inclui o dia inteiro, não importa a hora do pedido.
+    fim_exclusivo = pd.Timestamp(data_fim) + pd.Timedelta(days=1)
+    out = vendas[(vendas["data_pedido"] >= pd.Timestamp(data_ini)) & (vendas["data_pedido"] < fim_exclusivo)]
     if canais:
         out = out[out["canal"].isin(canais)]
     return out
