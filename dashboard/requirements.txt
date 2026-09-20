@@ -6,3 +6,4 @@ pyyaml>=6.0
 pydantic>=2.6
 ollama>=0.3
 litellm>=1.70
+pytest>=8.0
