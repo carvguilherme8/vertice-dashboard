@@ -1,10 +1,11 @@
 # Painel Único de Decisão Comercial · Vértice
 
-Fizemos deploy na Solução e no Dash de Gestão. Estes podem ser acessados nos seguintes links:
+### Aplicações em Produção
 
-Dashboard Gestão: https://vertice-dashboard-gestao.plotly.app/
+-  **Solução Proposta (Painel Único · Streamlit):** [case-vertice-dashboard.streamlit.app](https://case-vertice-dashboard.streamlit.app/)
+-  **Dashboard de Gestão (Dash · Plotly Cloud):** [vertice-dashboard-gestao.plotly.app](https://vertice-dashboard-gestao.plotly.app/)
 
-Solução Proposta: https://case-vertice-dashboard.streamlit.app/
+---
 
 Dois entregáveis do case Vértice (bootcamp EloGroup), cada um com seu propósito:
 
