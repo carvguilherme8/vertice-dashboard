@@ -1,5 +1,12 @@
 # Painel Único de Decisão Comercial · Vértice
 
+### Aplicações em Produção
+
+-  **Solução Proposta (Painel Único · Streamlit):** [case-vertice-dashboard.streamlit.app](https://case-vertice-dashboard.streamlit.app/)
+-  **Dashboard de Gestão (Dash · Plotly Cloud):** [vertice-dashboard-gestao.plotly.app](https://vertice-dashboard-gestao.plotly.app/)
+
+---
+
 Dois entregáveis do case Vértice (bootcamp EloGroup), cada um com seu propósito:
 
 - **`solucao_final/`** (Streamlit) — o Painel Único: ferramenta de ação (recuperação de receita com IA, guardrails, memo executivo). Este é o app com abas, descrito abaixo.
