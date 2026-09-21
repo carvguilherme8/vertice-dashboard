@@ -9,8 +9,8 @@
 
 Dois entregáveis do case Vértice (bootcamp EloGroup), cada um com seu propósito:
 
-- **`dashboard/`** (Streamlit) — o Painel Único: ferramenta de ação (recuperação de receita com IA, guardrails, memo executivo). Este é o app com abas, descrito abaixo.
-- **`dash_gestao/`** (Dash) — o Dashboard de Gestão: só leitura, indicadores-chave para a diretoria acompanhar margem, canais, clientes, operação e atendimento. Sem IA, sem botão que dispare ação — ver seção própria abaixo.
+- **`dashboard/`** (Streamlit), o Painel Único: ferramenta de ação (recuperação de receita com IA, guardrails, memo executivo). Este é o app com abas, descrito abaixo.
+- **`dash_gestao/`** (Dash)m o Dashboard de Gestão: só leitura, indicadores-chave para a diretoria acompanhar margem, canais, clientes, operação e atendimento. Ver seção própria abaixo.
 
 ## Abas (Painel Único · Streamlit)
 
