@@ -63,7 +63,7 @@ python scripts/backtest_rodadas.py --inicio 2023-06-01 --fim 2024-01-26 --step 7
 7. **`07_avaliacao_impacto.ipynb`** — calcula o impacto financeiro de cada frente a partir dos números canônicos do 06 — base das métricas mostradas nos dois apps.
 8. **`08_priorizacao_e_selecao.ipynb`** — decide onde atuar primeiro e qual solução construir, com a priorização como saída do cálculo, não premissa de entrada.
 
-**Reprodutibilidade:** só o `01` e o `02` rodam com o que já está no repo (`data/processed/`). Os demais dependem de artefatos deliberadamente fora do controle de versão — `01`, `05` e `06` precisam dos CSVs brutos do data room (`05`/`06` esperam a pasta `Dados do Case/`, `01` espera `2.Data Room/` — nomes diferentes, ajuste o path se for rodar localmente), e `07`/`08` consomem os `.json` que `05`/`06` gravam em `outputs/` (também gitignored). Sem esses arquivos, os notebooks continuam servindo como documentação do raciocínio, só não re-executam do zero.
+**Reprodutibilidade:** só o `01` e o `02` rodam com o que já está no repo (`data/processed/`). Os demais dependem de artefatos deliberadamente fora do controle de versão — `01`, `05` e `06` precisam dos CSVs brutos do data room e `07`/`08` consomem os `.json` que `05`/`06` gravam em `outputs/` (também gitignored). Os notebooks continuam servindo como documentação do raciocínio, só não re-executam do zero.
 
 ## Dashboard de Gestão (Dash)
 
