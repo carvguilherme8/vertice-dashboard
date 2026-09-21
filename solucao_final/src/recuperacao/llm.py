@@ -46,7 +46,7 @@ def _api_key_eloagents() -> str:
     if not chave:
         raise LLMIndisponivel(
             "ELOAGENTS_API_KEY não configurada — defina em "
-            "dashboard/.streamlit/secrets.toml (local, veja o .example) ou "
+            "solucao_final/.streamlit/secrets.toml (local, veja o .example) ou "
             "nos Secrets do app no Streamlit Cloud (deploy)."
         )
     return chave

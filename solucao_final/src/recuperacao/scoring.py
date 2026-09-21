@@ -3,7 +3,7 @@
 Regra escrita, sem modelo treinado: não existe histórico rotulado de
 tentativas de recuperação (ver v4/09_avaliacao_solucao.md, seção 2.3), então
 nenhum peso aqui vem de "o que deu certo antes" — vem de heurística de
-negócio declarada em dashboard/config/recuperacao.yaml, auditável e
+negócio declarada em solucao_final/config/recuperacao.yaml, auditável e
 recalibrável sem tocar em código.
 """
 from __future__ import annotations

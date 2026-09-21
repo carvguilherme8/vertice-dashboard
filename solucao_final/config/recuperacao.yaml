@@ -40,8 +40,8 @@ politica:
 llm:
   # "eloagents" = API Sandbox da EloGroup (mesma chave/endpoint da
   # Aula07_Pratica.ipynb); "ollama" = modelo local, sem custo e sem dado
-  # saindo do ambiente (ver dashboard/src/recuperacao/llm.py). A chave da
-  # Sandbox nunca fica aqui — vem de dashboard/.streamlit/secrets.toml
+  # saindo do ambiente (ver solucao_final/src/recuperacao/llm.py). A chave da
+  # Sandbox nunca fica aqui — vem de solucao_final/.streamlit/secrets.toml
   # (local, gitignored) ou dos Secrets do app no Streamlit Cloud (deploy).
   provider: eloagents
   model: "openai/gemini-3-flash-preview"  # modelo leve (flash) da Sandbox — não trocar por um mais pesado sem necessidade

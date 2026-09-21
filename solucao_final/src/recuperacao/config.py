@@ -11,7 +11,7 @@ import streamlit as st
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
-CONFIG_PATH = ROOT / "dashboard" / "config" / "recuperacao.yaml"
+CONFIG_PATH = ROOT / "solucao_final" / "config" / "recuperacao.yaml"
 
 
 @st.cache_data(show_spinner=False)
