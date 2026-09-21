@@ -50,6 +50,21 @@ pytest tests/ -v
 python scripts/backtest_rodadas.py --inicio 2023-06-01 --fim 2024-01-26 --step 7
 ```
 
+## Notebooks de Análise
+
+`notebooks_analises/` documenta o diagnóstico exploratório que sustenta os dois apps — é o processo que gerou `data/processed/` e as hipóteses por trás dos KPIs. Pensados pra rodar em sequência (01→08, no mesmo kernel):
+
+1. **`01_qualidade_dados.ipynb`** — audita as 5 bases do data room (nulos, duplicidade, integridade referencial, cobertura temporal, consistência de fórmulas) e exporta a versão tratada pra `data/processed/*.parquet`.
+2. **`02_analise_exploratoria.ipynb`** — visualiza as relações entre as métricas e o problema central do case (queda de rentabilidade com volume crescendo), uma seção por linha de investigação (Margem, Marketing, Operações, Atendimento, Cliente).
+3. **`03_testes_estatisticos.ipynb`** — formaliza os padrões do notebook 02 em teste de hipótese, p-valor e tamanho de efeito.
+4. **`04_hipoteses_para_apresentacao.ipynb`** — reúne só as hipóteses com suporte estatístico real (confirmadas ou refutadas), cada uma com o gráfico e o teste que a sustentam — material-fonte dos slides.
+5. **`05_sanity_check.ipynb`** — papel de revisor cético: recomputa os números mais citados do zero, com código independente, e confronta contra os notebooks 06 e 07.
+6. **`06_numeros_canonicos.ipynb`** — fonte única de verdade dos números do diagnóstico; qualquer valor citado em outro lugar (05, 07, dashboards) tem que vir daqui.
+7. **`07_avaliacao_impacto.ipynb`** — calcula o impacto financeiro de cada frente a partir dos números canônicos do 06 — base das métricas mostradas nos dois apps.
+8. **`08_priorizacao_e_selecao.ipynb`** — decide onde atuar primeiro e qual solução construir, com a priorização como saída do cálculo, não premissa de entrada.
+
+**Reprodutibilidade:** só o `01` e o `02` rodam com o que já está no repo (`data/processed/`). Os demais dependem de artefatos deliberadamente fora do controle de versão — `01`, `05` e `06` precisam dos CSVs brutos do data room (`05`/`06` esperam a pasta `Dados do Case/`, `01` espera `2.Data Room/` — nomes diferentes, ajuste o path se for rodar localmente), e `07`/`08` consomem os `.json` que `05`/`06` gravam em `outputs/` (também gitignored). Sem esses arquivos, os notebooks continuam servindo como documentação do raciocínio, só não re-executam do zero.
+
 ## Dashboard de Gestão (Dash)
 
 Painel de leitura para a diretoria — 6 seções (Visão Geral, Margem, Canais, Clientes, Operação, Atendimento), cada uma com KPIs e gráficos que reaproveitam as mesmas fórmulas validadas do Painel Único (`solucao_final/src/metrics.py`), então os números nunca divergem entre os dois apps. Filtros de período, canal e categoria no topo; a seção Canais sempre mostra todos os canais (filtrar por canal ali anularia a própria comparação), e Clientes/Atendimento são fotografias completas da base (sem cruzamento de data com vendas).
