@@ -2,3 +2,6 @@ dash>=2.16
 pandas>=2.1
 plotly>=5.19
 pyarrow>=14
+streamlit>=1.64  # dependência transitiva: solucao_final/src/theme.py e data.py importam streamlit
+                 # (usado por @st.cache_data e pelas funções de UI do Painel Único), mesmo que
+                 # o Dash nunca chame nenhuma delas — o import falha sem o pacote instalado.

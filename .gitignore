@@ -1,8 +1,9 @@
-# Escopo do repo: só o dashboard e o que ele precisa pra rodar (data/processed,
-# tests, scripts). O material bruto do case (notebooks, CSVs, v3/v4, outputs)
-# fica só local, fora do controle de versão — por decisão explícita.
+# Escopo do repo: o dashboard, o que ele precisa pra rodar (data/processed,
+# tests, scripts) e os notebooks de análise (notebooks_analises/, versionados
+# como documentação — o notebook 01 só roda de novo com "2.Data Room/" local).
+# O resto do material bruto do case (CSVs, v3/v4, outputs) fica só local, fora
+# do controle de versão — por decisão explícita.
 2.Data Room/
-notebooks drive/
 outputs/
 v3/
 v4/

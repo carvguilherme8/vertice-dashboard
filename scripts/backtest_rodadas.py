@@ -15,8 +15,8 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
-DASHBOARD_DIR = Path(__file__).resolve().parents[1] / "dashboard"
-sys.path.insert(0, str(DASHBOARD_DIR))
+SOLUCAO_FINAL_DIR = Path(__file__).resolve().parents[1] / "solucao_final"
+sys.path.insert(0, str(SOLUCAO_FINAL_DIR))
 
 import pandas as pd  # noqa: E402
 

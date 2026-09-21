@@ -2,14 +2,14 @@
 
 Entregável do case: "Painel com indicadores-chave para a diretoria acompanhar
 margem, canais, clientes, operação e atendimento." Diferente do Painel Único
-(Streamlit, dashboard/app.py) — que é uma ferramenta de ação (recuperação de
-receita, guardrails, memo) — este é só leitura: um retrato executivo do
+(Streamlit, solucao_final/app.py) — que é uma ferramenta de ação (recuperação
+de receita, guardrails, memo) — este é só leitura: um retrato executivo do
 negócio, sem IA e sem botão que dispare nada.
 
 Layout: tela fixa (sem scroll), navegação lateral, uma seção por vez — como um
 BI de verdade, não uma página que rola. Reaproveita as mesmas fórmulas
-validadas (dashboard/src/metrics.py) e a mesma paleta CVD-safe de gráficos
-(dashboard/src/theme.py) do Painel Único — os números aqui nunca podem
+validadas (solucao_final/src/metrics.py) e a mesma paleta CVD-safe de gráficos
+(solucao_final/src/theme.py) do Painel Único — os números aqui nunca podem
 divergir dos números de lá, porque vêm do mesmo código, não de uma
 reimplementação.
 """
@@ -21,7 +21,7 @@ import plotly.graph_objects as go
 from dash import Input, Output, dcc, html
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "dashboard"))
+sys.path.insert(0, str(ROOT / "solucao_final"))
 
 from src import metrics, theme  # noqa: E402
 from src.data import filtrar_vendas, load_all  # noqa: E402
@@ -309,7 +309,7 @@ def _secao_geral(v):
     return "", corpo
 
 
-TETO_DESCONTO_PCT = 20  # política vigente — dashboard/config/recuperacao.yaml (politica.teto_desconto_pct)
+TETO_DESCONTO_PCT = 20  # política vigente — solucao_final/config/recuperacao.yaml (politica.teto_desconto_pct)
 
 
 def _secao_margem(v):
@@ -407,7 +407,7 @@ def _secao_clientes():
                       text=[theme.fmt_num(x) for x in fid["n_clientes"]])
 
     corpo = html.Div([
-        html.Div("Calculado a partir de clientes.csv isoladamente.", className="caveat"),
+        html.Div("Calculado a partir de clientes.csv isoladamente/re.", className="caveat"),
         hero,
         chart_grid(
             chart_card("LTV acumulado por segmento RFM", fig_seg),

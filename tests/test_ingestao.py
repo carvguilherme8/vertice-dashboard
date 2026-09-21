@@ -1,6 +1,6 @@
 """Testes de [A] — pipeline de ingestão. Sem dado novo chegando (o data room
 é um snapshot estático), a validação usa `data_referencia` parametrizada em
-vez de `datetime.now()` — ver dashboard/src/recuperacao/ingestao.py.
+vez de `datetime.now()` — ver solucao_final/src/recuperacao/ingestao.py.
 """
 from datetime import date, timedelta
 from pathlib import Path
