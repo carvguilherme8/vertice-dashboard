@@ -2,7 +2,7 @@
 
 ### Aplicações em Produção
 
--  **Solução Proposta (Painel Único · Streamlit):** [case-vertice-dashboard.streamlit.app](https://case-vertice-dashboard.streamlit.app/)
+-  **Solução Proposta (Painel Único · Streamlit):** [case-vertice-dashboard.streamlit.app/](https://case-vertice-solution.streamlit.app/)
 -  **Dashboard de Gestão (Dash · Plotly Cloud):** [vertice-dashboard-gestao.plotly.app](https://vertice-dashboard-gestao.plotly.app/)
 
 ---
