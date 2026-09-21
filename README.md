@@ -3,6 +3,7 @@
 Fizemos deploy na Solução e no Dash de Gestão. Estes podem ser acessados nos seguintes links:
 
 Dashboard Gestão: https://vertice-dashboard-gestao.plotly.app/
+
 Solução Proposta: https://case-vertice-dashboard.streamlit.app/
 
 Dois entregáveis do case Vértice (bootcamp EloGroup), cada um com seu propósito:
